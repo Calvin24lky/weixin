@@ -60,24 +60,24 @@ class wechatCallbackapiTest
     	$postData = $GLOBALS["HTTP_RAW_POST_DATA"];//全局变量
 
     	//处理xml数据包，获得xml对象，访问对象的属性
-    	$xmlobj = simplexml_load_string($postData,"SimpleXMLElement",LIBXML_NOCDATA);
+    	$xmlObj = simplexml_load_string($postData,"SimpleXMLElement",LIBXML_NOCDATA);
 
     	//获取属性
-    	$toUserName = $xmlobj->ToUserName;//获取开发者微信号
-    	$fromUserName = $xmlobj->FromUserName;//获取用户的openid
-    	$msgType = $xmlobj->MsgType;//消息的类型
+    	$toUserName = $xmlObj->ToUserName;//获取开发者微信号
+    	$fromUserName = $xmlObj->FromUserName;//获取用户的openid
+    	$msgType = $xmlObj->MsgType;//消息的类型
 
     	//根据消息类型进行业务处理
     	switch ($msgType) {
     		case 'text':
     			//接受文本消息
-    			$this->receiveText($xmlobj);
-    			//回复文本消息
-    			$this->replyText($xmlobj);
+    			echo $this->receiveText($xmlObj);
     			break;
 
     		case 'image':
-    			# code...
+
+    			//接受图片消息
+    			echo $this->receiveImage($xmlObj);
     			break;
     		
     		default:
@@ -86,12 +86,16 @@ class wechatCallbackapiTest
     	}
     }
 
+    //接受文本消息
     public function receiveText($obj)
     {
     	$content = $obj->Content;//获取文本消息的内容
+    	$replyStr = "<a href='http://39.108.229.63/Vtime/test.html'>点击查询志愿时</a>";
+    	return $this->replyText($obj,$replyStr);
     }
 
-    public function replyText($obj)
+    //回复文本消息
+    public function replyText($obj,$contentStr)
     {
 	    $replyTextMsg = "<xml>
 			                <ToUserName><![CDATA[%s]]></ToUserName>
@@ -100,8 +104,30 @@ class wechatCallbackapiTest
 			                <MsgType><![CDATA[text]]></MsgType>
 			                <Content><![CDATA[%s]]></Content>
 		                </xml>";
-        $contentStr = "<a href='http://39.108.229.63/Vtime/test.html'>点击查询志愿时</a>";
-		echo sprintf($replyTextMsg, $obj->FromUserName, $obj->ToUserName, time(), $contentStr);
+		return sprintf($replyTextMsg, $obj->FromUserName, $obj->ToUserName, time(), $contentStr);
+    }
+
+    public function receiveImage($obj)
+    {
+    	$picUrl = $xmlObj->PicUrl;//获取图片的URL
+    	$mediaId = $xmlObj->MediaId;//获取图片消息媒体id
+    	$picArr = array('picUrl'=>$picUrl,'mediaId'=>$mediaId);
+    	return $this->replyImage($obj,$picArr);
+    }
+
+    public function replyImage($obj,$array)
+    {
+    	//回复图片消息
+    	$replyImageMsg = "<xml>
+			                <ToUserName><![CDATA[%s]]></ToUserName>
+			                <FromUserName><![CDATA[%s]]></FromUserName>
+			                <CreateTime>%s</CreateTime>
+			                <MsgType><![CDATA[image]]></MsgType>
+			                <Image>
+			                	<MediaId><![CDATA[%s]]></MediaId>
+			                </Image>
+		                </xml>";
+		return sprintf($replyImageMsg,$obj->FromUserName,$obj->ToUserName,time(),$array['mediaId']);
     }
 }
 
