@@ -1,16 +1,19 @@
 <?php
-/**
-  * wechat php test
-  */
+	/**
+	  * wechat php test
+	  */
 
-//define your token
-define("TOKEN", "chicklin");
-$wechatObj = new wechatCallbackapiTest();
-if(isset($_GET['echostr'])){
-    $wechatObj->valid();
-}else{
-    $wechatObj->responseMsg();
-}
+	//define your token
+	define("TOKEN", "chicklin");
+	$wechatObj = new wechatCallbackapiTest();
+	if(isset($_GET['echostr']))
+	{
+	    $wechatObj->valid();
+	}
+	else
+	{
+	    $wechatObj->responseMsg();
+	}
 
 
 class wechatCallbackapiTest
@@ -25,61 +28,80 @@ class wechatCallbackapiTest
             exit;
         }
     }
-
-    public function responseMsg()
-    {
-        //get post data, May be due to the different environments
-        $postStr = $GLOBALS["HTTP_RAW_POST_DATA"];
-
-          //extract post data
-        if (!empty($postStr)){
-                
-                  $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
-                $fromUsername = $postObj->FromUserName;
-                $toUsername = $postObj->ToUserName;
-                $keyword = trim($postObj->Content);
-                $time = time();
-                $textTpl = "<xml>
-                            <ToUserName><![CDATA[%s]]></ToUserName>
-                            <FromUserName><![CDATA[%s]]></FromUserName>
-                            <CreateTime>%s</CreateTime>
-                            <MsgType><![CDATA[%s]]></MsgType>
-                            <Content><![CDATA[%s]]></Content>
-                            <FuncFlag>0</FuncFlag>
-                            </xml>";             
-                if(!empty( $keyword ))
-                {
-                      $msgType = "text";
-                    $contentStr = "<a href='http://39.108.229.63/Vtime/test.html'>点击查询志愿时</a>";
-                    $resultStr = sprintf($textTpl, $fromUsername, $toUsername, $time, $msgType, $contentStr);
-                    echo $resultStr;
-                }else{
-                    echo "Input something...";
-                }
-
-        }else {
-            echo "";
-            exit;
-        }
-    }
         
+    //检验微信加密签名Signature
     private function checkSignature()
     {
-        $signature = $_GET["signature"];
-        $timestamp = $_GET["timestamp"];
-        $nonce = $_GET["nonce"];    
-                
-        $token = TOKEN;
-        $tmpArr = array($token, $timestamp, $nonce);
-        sort($tmpArr, SORT_STRING);
-        $tmpStr = implode( $tmpArr );
-        $tmpStr = sha1( $tmpStr );
+        $signature = $_GET["signature"];//微信加密签名
+        $timestamp = $_GET["timestamp"];//时间戳
+        $nonce = $_GET["nonce"];//随机数
         
-        if( $tmpStr == $signature ){
+        //加密校验
+        //将token、timestamp、nonce三个参数进行字典序排序        
+        $tmpArr = array(TOKEN, $timestamp, $nonce);
+        sort($tmpArr, SORT_STRING);
+
+        //将三个参数字符串拼接成一个字符串进行sha1加密
+        $tmpStr = implode($tmpArr);
+        $tmpStr = sha1($tmpStr);
+        
+        //开发者获得加密后的字符串与signature对比
+        if($tmpStr == $signature){
             return true;
         }else{
             return false;
         }
+    }
+
+    //响应消息
+    public function responseMsg()
+    {
+    	//接收xml数据包
+    	$postData = $GLOBALS["HTTP_RAW_POST_DATA"];//全局变量
+
+    	//处理xml数据包，获得xml对象，访问对象的属性
+    	$xmlobj = simplexml_load_string($postData,"SimpleXMLElement",LIBXML_NOCDATA);
+
+    	//获取属性
+    	$toUserName = $xmlobj->ToUserName;//获取开发者微信号
+    	$fromUserName = $xmlobj->FromUserName;//获取用户的openid
+    	$msgType = $xmlobj->MsgType;//消息的类型
+
+    	//根据消息类型进行业务处理
+    	switch ($msgType) {
+    		case 'text':
+    			//接受文本消息
+    			$this->receiveText($xmlobj);
+    			//回复文本消息
+    			$this->replyText($xmlobj);
+    			break;
+
+    		case 'image':
+    			# code...
+    			break;
+    		
+    		default:
+    			# code...
+    			break;
+    	}
+    }
+
+    public function receiveText($obj)
+    {
+    	$content = $obj->Content;//获取文本消息的内容
+    }
+
+    public function replyText($obj)
+    {
+	    $replyTextMsg = "<xml>
+			                <ToUserName><![CDATA[%s]]></ToUserName>
+			                <FromUserName><![CDATA[%s]]></FromUserName>
+			                <CreateTime>%s</CreateTime>
+			                <MsgType><![CDATA[text]]></MsgType>
+			                <Content><![CDATA[%s]]></Content>
+		                </xml>";
+        $contentStr = "<a href='http://39.108.229.63/Vtime/test.html'>点击查询志愿时</a>";
+		echo sprintf($replyTextMsg, $obj->FromUserName, $obj->ToUserName, time(), $contentStr);
     }
 }
 
