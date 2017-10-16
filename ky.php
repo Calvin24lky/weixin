@@ -73,7 +73,7 @@ class wechatCallbackapiTest
     			switch ($xmlObj->Event) {
     				case 'subscribe':
     					$replyContent = "欢迎关注！回复“功能”看看我能干什么吧！";
-    					$repllyTextMsg =  "<xml>
+    					$replyTextMsg =  "<xml>
 								               <ToUserName><![CDATA[%s]]></ToUserName>
 								               <FromUserName><![CDATA[%s]]></FromUserName>
 								               <CreateTime>%s</CreateTime>
