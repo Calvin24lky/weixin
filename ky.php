@@ -80,7 +80,7 @@ class wechatCallbackapiTest
 								               <MsgType><![CDATA[text]]></MsgType>
 								               <Content><![CDATA[%s]]></Content>
 							               </xml>";
-						echo sprintf($replyTextMsg, $obj->FromUserName, $obj->ToUserName, time(), $replyContent);
+						echo sprintf($replyTextMsg,$fromUserName,$toUserName,time(),$replyContent);
     					break;
     				
     				default:
