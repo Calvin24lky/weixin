@@ -109,8 +109,8 @@ class wechatCallbackapiTest
 
     public function receiveImage($obj)
     {
-    	$picUrl = $xmlObj->PicUrl;//获取图片的URL
-    	$mediaId = $xmlObj->MediaId;//获取图片消息媒体id
+    	$picUrl = $obj->PicUrl;//获取图片的URL
+    	$mediaId = $obj->MediaId;//获取图片消息媒体id
     	$picArr = array('picUrl'=>$picUrl,'mediaId'=>$mediaId);
     	return $this->replyImage($obj,$picArr);
     }
