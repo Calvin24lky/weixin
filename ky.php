@@ -69,6 +69,27 @@ class wechatCallbackapiTest
 
     	//根据消息类型进行业务处理
     	switch ($msgType) {
+    		case 'event':
+    			switch ($xmlObj->Event) {
+    				case 'subscribe':
+    					$replyContent = "欢迎关注！回复“功能”看看我能干什么吧！";
+    					$repllyTextMsg =  "<xml>
+								               <ToUserName><![CDATA[%s]]></ToUserName>
+								               <FromUserName><![CDATA[%s]]></FromUserName>
+								               <CreateTime>%s</CreateTime>
+								               <MsgType><![CDATA[text]]></MsgType>
+								               <Content><![CDATA[%s]]></Content>
+							               </xml>";
+						echo sprintf($replyTextMsg, $obj->FromUserName, $obj->ToUserName, time(), $replyContent);
+    					break;
+    				
+    				default:
+    					# code...
+    					break;
+    			}
+    			# code...
+    			break;
+
     		case 'text':
     			//接受文本消息
     			echo $this->receiveText($xmlObj);
