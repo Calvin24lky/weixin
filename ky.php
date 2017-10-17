@@ -93,17 +93,23 @@ class wechatCallbackapiTest
     //接受文本消息
     public function receiveText($obj)
     {
-    	$keyword = trim($obj->Content);//获取文本消息的内容
+    	$content = trim($obj->Content);//获取文本消息的内容
+        $keyword = mb_substr($content,0,2,'utf-8');
     	switch ($keyword) {
     		case '功能':
-    			$replyStr = "功能介绍：\n1、查询志愿时\n2、3、4、5";
+    			$replyStr = "查询功能介绍(回复关键字)：\n1、志愿时\n2、天气+城市名3、4、5";
     			return $this->replyText($obj,$replyStr);
     			break;
 
-    		case '查询志愿时':
+    		case '志愿':
     			$replyStr = "<a href='http://www.chicklin.site/Vtime/test.html'>点击查询志愿时</a>";
     			return $this->replyText($obj,$replyStr);
     			break;
+
+            case '天气':
+                $replyStr = mb_substr($content,2,6,'utf-8');;
+                return $this->replyText($obj,$replyStr);
+                break;
     		
     		default:
     			$replyStr = "回复'功能'查看我的功能吧~";
