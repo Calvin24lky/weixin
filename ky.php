@@ -70,24 +70,7 @@ class wechatCallbackapiTest
     	//根据消息类型进行业务处理
     	switch ($msgType) {
     		case 'event':
-    			switch ($xmlObj->Event) {
-    				case 'subscribe':
-    					$replyContent = "欢迎关注！回复“功能”看看我能干什么吧！";
-    					$replyTextMsg =  "<xml>
-								               <ToUserName><![CDATA[%s]]></ToUserName>
-								               <FromUserName><![CDATA[%s]]></FromUserName>
-								               <CreateTime>%s</CreateTime>
-								               <MsgType><![CDATA[text]]></MsgType>
-								               <Content><![CDATA[%s]]></Content>
-							               </xml>";
-						echo sprintf($replyTextMsg,$fromUserName,$toUserName,time(),$replyContent);
-    					break;
-    				
-    				default:
-    					# code...
-    					break;
-    			}
-    			# code...
+    			echo $this->receiveEvent($xmlObj);
     			break;
 
     		case 'text':
@@ -164,6 +147,20 @@ class wechatCallbackapiTest
 			                </Image>
 		                </xml>";
 		return sprintf($replyImageMsg,$obj->FromUserName,$obj->ToUserName,time(),$array['mediaId']);
+    }
+
+    public function receiveEvent($obj)
+    {
+		switch ($obj->Event) {
+			case 'subscribe':
+				$replyContent = "欢迎关注！回复“功能”看看我能干什么吧！";
+				return $this->replyText($obj,$replyContent);
+				break;
+			
+			default:
+				# code...
+				break;
+		}
     }
 }
 
