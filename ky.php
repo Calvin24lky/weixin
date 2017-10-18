@@ -111,7 +111,8 @@ class wechatCallbackapiTest
                 $cityname = mb_substr($content,2,6,'utf-8');//获得城市名
                 echo $this->replyText($obj,$cityname);
                 $weather_json = $this->getWeather($cityname);
-                echo $this->replyText($obj,$weather_json->{'msg'});
+                $arr = json_decode($weather_json);
+                echo $this->replyText($obj,$arr->{'msg'});
                 //$replyStr = $this->replyWeather($weather_json);
                 //return $this->replyText($obj,$replyStr);
                 break;
