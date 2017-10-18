@@ -109,12 +109,9 @@ class wechatCallbackapiTest
 
             case '天气':
                 $cityname = mb_substr($content,2,6,'utf-8');//获得城市名
-                echo $this->replyText($obj,$cityname);
                 $weather_json = $this->getWeather($cityname);
-                $arr = json_decode($weather_json);
-                echo $this->replyText($obj,$arr->{'msg'});
-                //$replyStr = $this->replyWeather($weather_json);
-                //return $this->replyText($obj,$replyStr);
+                $replyStr = $this->replyWeather($weather_json);
+                return $this->replyText($obj,$replyStr);
                 break;
     		
     		default:
@@ -183,7 +180,7 @@ class wechatCallbackapiTest
         $appcode = "5f8abfa54bed4f128d1fb245a13a6460";//7830cf6348c444d1a1455e70fb5f434e
         $headers = array();
         array_push($headers, "Authorization:APPCODE " . $appcode);
-        $querys = "city={$cityname}citycode=citycode&cityid=cityid&ip=ip&location=location";
+        $querys = "city={$cityname}&citycode=citycode&cityid=cityid&ip=ip&location=location";
         $bodys = "";
         $url = $host . $path . "?" . $querys;
 
@@ -201,7 +198,7 @@ class wechatCallbackapiTest
         }
         //var_dump(curl_exec($curl));
         $result = curl_exec($curl);
-        curl_close($curl);
+        //curl_close($curl);
         return $result;
     }
 
@@ -209,8 +206,7 @@ class wechatCallbackapiTest
     {
         $arr = json_decode($weather_json);
         $result = $arr->{"result"};
-        $replyText = "城市: ".$result->{'city'}."\n更新时间: ".$result->{'updatetime'}."\n----------\n"."1、天气速览\n天气: ".$result->{'weather'}."\n温度: ".$result->{'temp'}."°C (最高温: ".$result->{'temphigh'}."°C 最低温: ".$result->{'templow'}."°C)\n湿度: ".$result->{'humidity'}."%\n风力: ".$result->{'winddirect'}.$result->{'windpower'}."\n空气: ".$result->{'aqi'}->{'quality'}."\n".$result->{'index'}[2]->{'iname'}.": ".$result->{'index'}[2]->{'ivalue'}."\n----------\n";
-        //.'2、空气质量\nPM2.5: '.$result->{'aqi'}->{'pm2_5'}.'\nPM10: '.$result->{'aqi'}->{'pm10'}.'\nSO2: '.$result->{'aqi'}->{'so2'}.'\nNO2: '.$result->{'aqi'}->{'no2'}.'\nCO: '.$result->{'aqi'}->{'co'}.'\n指数: '.$result->{'aqi'}->{'aqiinfo'}->{'level'}.'\n影响: '.$result->{'aqi'}->{'aqiinfo'}->{'affect'}.'\n----------\n'.'3、未来6小时天气: \n'.$result->{'hourly'}[0]->{'time'}.' '.$result->{'hourly'}[0]->{'weather'}.' '.$result->{'hourly'}[0]->{'temp'}.'°C\n'.$result->{'hourly'}[1]->{'time'}.' '.$result->{'hourly'}[1]->{'weather'}.' '.$result->{'hourly'}[1]->{'temp'}.'°C\n'.$result->{'hourly'}[2]->{'time'}.' '.$result->{'hourly'}[2]->{'weather'}.' '.$result->{'hourly'}[2]->{'temp'}.'°C\n'.$result->{'hourly'}[3]->{'time'}.' '.$result->{'hourly'}[3]->{'weather'}.' '.$result->{'hourly'}[3]->{'temp'}.'°C\n'.$result->{'hourly'}[4]->{'time'}.' '.$result->{'hourly'}[4]->{'weather'}.' '.$result->{'hourly'}[4]->{'temp'}.'°C\n'.$result->{'hourly'}[5]->{'time'}.' '.$result->{'hourly'}[5]->{'weather'}.' '.$result->{'hourly'}[5]->{'temp'}.'°C\n'.'\n----------\n'.'3、未来3天天气: \n'.$result->{'daily'}[1]->{'date'}.' '.$result->{'daily'}[1]->{'week'}.' '.$result->{'daily'}[1]->{'day'}->{'weather'}.' '.$result->{'daily'}[1]->{'night'}->{'templow'}.'-'.$result->{'daily'}[1]->{'day'}->{'temphigh'}.'°C\n'.$result->{'daily'}[2]->{'date'}.' '.$result->{'daily'}[2]->{'week'}.' '.$result->{'daily'}[2]->{'day'}->{'weather'}.' '.$result->{'daily'}[2]->{'night'}->{'templow'}.'-'.$result->{'daily'}[2]->{'day'}->{'temphigh'}.'°C\n'.$result->{'daily'}[3]->{'date'}.' '.$result->{'daily'}[3]->{'week'}.' '.$result->{'daily'}[3]->{'day'}->{'weather'}.' '.$result->{'daily'}[3]->{'night'}->{'templow'}.'-'.$result->{'daily'}[3]->{'day'}->{'temphigh'}.'°C\n';
+        $replyText = "城市: ".$result->{'city'}."\n更新时间: ".$result->{'updatetime'}."\n----------\n"."1、天气速览\n天气: ".$result->{'weather'}."\n温度: ".$result->{'temp'}."°C (最高温: ".$result->{'temphigh'}."°C 最低温: ".$result->{'templow'}."°C)\n湿度: ".$result->{'humidity'}."%\n风力: ".$result->{'winddirect'}.$result->{'windpower'}."\n空气: ".$result->{'aqi'}->{'quality'}."\n".$result->{'index'}[2]->{'iname'}.": ".$result->{'index'}[2]->{'ivalue'}."\n----------\n"."2、空气质量\nPM2.5: ".$result->{'aqi'}->{'pm2_5'}."\nPM10: ".$result->{'aqi'}->{'pm10'}."\nSO2: ".$result->{'aqi'}->{'so2'}."\nNO2: ".$result->{'aqi'}->{'no2'}."\nCO: ".$result->{'aqi'}->{'co'}."\n指数: ".$result->{'aqi'}->{'aqiinfo'}->{'level'}."\n影响: ".$result->{'aqi'}->{'aqiinfo'}->{'affect'}."\n----------\n"."3、未来6小时天气: \n".$result->{'hourly'}[0]->{'time'}.' '.$result->{'hourly'}[0]->{'weather'}.' '.$result->{'hourly'}[0]->{'temp'}."°C\n".$result->{'hourly'}[1]->{'time'}.' '.$result->{'hourly'}[1]->{'weather'}.' '.$result->{'hourly'}[1]->{'temp'}."°C\n".$result->{'hourly'}[2]->{'time'}.' '.$result->{'hourly'}[2]->{'weather'}.' '.$result->{'hourly'}[2]->{'temp'}."°C\n".$result->{'hourly'}[3]->{'time'}.' '.$result->{'hourly'}[3]->{'weather'}.' '.$result->{'hourly'}[3]->{'temp'}."°C\n".$result->{'hourly'}[4]->{'time'}.' '.$result->{'hourly'}[4]->{'weather'}.' '.$result->{'hourly'}[4]->{'temp'}."°C\n".$result->{'hourly'}[5]->{'time'}.' '.$result->{'hourly'}[5]->{'weather'}.' '.$result->{'hourly'}[5]->{'temp'}."°C"."\n----------\n"."3、未来3天天气: \n".$result->{'daily'}[1]->{'date'}.' '.$result->{'daily'}[1]->{'week'}.' '.$result->{'daily'}[1]->{'day'}->{'weather'}.' '.$result->{'daily'}[1]->{'night'}->{'templow'}.'-'.$result->{'daily'}[1]->{'day'}->{'temphigh'}."°C\n".$result->{'daily'}[2]->{'date'}.' '.$result->{'daily'}[2]->{'week'}.' '.$result->{'daily'}[2]->{'day'}->{'weather'}.' '.$result->{'daily'}[2]->{'night'}->{'templow'}.'-'.$result->{'daily'}[2]->{'day'}->{'temphigh'}."°C\n".$result->{'daily'}[3]->{'date'}.' '.$result->{'daily'}[3]->{'week'}.' '.$result->{'daily'}[3]->{'day'}->{'weather'}.' '.$result->{'daily'}[3]->{'night'}->{'templow'}.'-'.$result->{'daily'}[3]->{'day'}->{'temphigh'}."°C\n";
         return $replyText;
     }
 }
