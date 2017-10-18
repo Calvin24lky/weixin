@@ -6,7 +6,7 @@
 	//define your token
 	define("TOKEN", "chicklin");
 	$wechatObj = new wechatCallbackapiTest();
-	if(isset($_GET['echostr']))
+	if(isset($_GET["echostr"]))
 	{
 	    $wechatObj->valid();
 	}
@@ -69,16 +69,16 @@ class wechatCallbackapiTest
 
     	//根据消息类型进行业务处理
     	switch ($msgType) {
-    		case 'event':
+    		case "event":
     			echo $this->receiveEvent($xmlObj);
     			break;
 
-    		case 'text':
+    		case "text":
     			//接受文本消息
     			echo $this->receiveText($xmlObj);
     			break;
 
-    		case 'image':
+    		case "image":
 
     			//接受图片消息
     			echo $this->receiveImage($xmlObj);
@@ -95,27 +95,27 @@ class wechatCallbackapiTest
     {
     	//$content = trim($obj->Content);//获取文本消息的内容
         $content = str_replace(" ","",$obj->Content);
-        $keyword = mb_substr($content,0,2,'utf-8');//截取回复消息的前两个中文
+        $keyword = mb_substr($content,0,2,"utf-8");//截取回复消息的前两个中文
     	switch ($keyword) {
-    		case '功能':
+    		case "功能":
     			$replyStr = "查询功能介绍(回复关键字)：\n1、志愿时\n2、天气+城市名3、4、5";
     			return $this->replyText($obj,$replyStr);
     			break;
 
-    		case '志愿':
-    			$replyStr = "<a href='http://www.chicklin.site/Vtime/test.html'>点击查询志愿时</a>";
+    		case "志愿":
+    			$replyStr = "<a href="http://www.chicklin.site/Vtime/test.html">点击查询志愿时</a>";
     			return $this->replyText($obj,$replyStr);
     			break;
 
-            case '天气':
-                $cityname = mb_substr($content,2,6,'utf-8');//获得城市名
+            case "天气":
+                $cityname = mb_substr($content,2,6,"utf-8");//获得城市名
                 $weather_json = $this->getWeather($cityname);
                 $replyStr = $this->replyWeather($weather_json);
                 return $this->replyText($obj,$replyStr);
                 break;
     		
     		default:
-    			$replyStr = "回复'功能'查看我的功能吧~";
+    			$replyStr = "回复"功能"查看我的功能吧~";
     			return $this->replyText($obj,$replyStr);
     			break;
     	}
@@ -139,7 +139,7 @@ class wechatCallbackapiTest
     {
     	$picUrl = $obj->PicUrl;//获取图片的URL
     	$mediaId = $obj->MediaId;//获取图片消息媒体id
-    	$picArr = array('picUrl'=>$picUrl,'mediaId'=>$mediaId);
+    	$picArr = array("picUrl"=>$picUrl,"mediaId"=>$mediaId);
     	return $this->replyImage($obj,$picArr);
     }
 
@@ -155,13 +155,13 @@ class wechatCallbackapiTest
 			                	<MediaId><![CDATA[%s]]></MediaId>
 			                </Image>
 		                </xml>";
-		return sprintf($replyImageMsg,$obj->FromUserName,$obj->ToUserName,time(),$array['mediaId']);
+		return sprintf($replyImageMsg,$obj->FromUserName,$obj->ToUserName,time(),$array["mediaId"]);
     }
 
     public function receiveEvent($obj)
     {
 		switch ($obj->Event) {
-			case 'subscribe':
+			case "subscribe":
 				$replyContent = "欢迎关注！回复“功能”看看我能干什么吧！";
 				return $this->replyText($obj,$replyContent);
 				break;
@@ -206,7 +206,7 @@ class wechatCallbackapiTest
     {
         $arr = json_decode($weather_json);
         $result = $arr->{"result"};
-        $replyText = '城市: '.$result->{'city'}.'\n更新时间: '.$result->{'updatetime'}.'\n----------\n'.'1、天气速览\n天气: '.$result->{'weather'}.'\n温度: '.$result->{'temp'}.'°C (最高温: '.$result->{'temphigh'}.'°C 最低温: '.$result->{'templow'}.'°C)\n湿度: '.$result->{'humidity'}.'%'.'\n风力: '.$result->{'winddirect'}.$result->{'windpower'}.'\n空气: '.$result->{'aqi'}->{'quality'}.'\n'.$result->{'index'}[2]->{'iname'}.': '.$result->{'index'}[2]->{'ivalue'}.'\n----------\n'.'2、空气质量\nPM2.5: '.$result->{'aqi'}->{'pm2_5'}.'\nPM10: '.$result->{'aqi'}->{'pm10'}.'\nSO2: '.$result->{'aqi'}->{'so2'}.'\nNO2: '.$result->{'aqi'}->{'no2'}.'\nCO: '.$result->{'aqi'}->{'co'}.'\n指数: '.$result->{'aqi'}->{'aqiinfo'}->{'level'}.'\n影响: '.$result->{'aqi'}->{'aqiinfo'}->{'affect'}.'\n----------\n'.'3、未来6小时天气: \n'.$result->{'hourly'}[0]->{'time'}.' '.$result->{'hourly'}[0]->{'weather'}.' '.$result->{'hourly'}[0]->{'temp'}.'°C\n'.$result->{'hourly'}[1]->{'time'}.' '.$result->{'hourly'}[1]->{'weather'}.' '.$result->{'hourly'}[1]->{'temp'}.'°C\n'.$result->{'hourly'}[2]->{'time'}.' '.$result->{'hourly'}[2]->{'weather'}.' '.$result->{'hourly'}[2]->{'temp'}.'°C\n'.$result->{'hourly'}[3]->{'time'}.' '.$result->{'hourly'}[3]->{'weather'}.' '.$result->{'hourly'}[3]->{'temp'}.'°C\n'.$result->{'hourly'}[4]->{'time'}.' '.$result->{'hourly'}[4]->{'weather'}.' '.$result->{'hourly'}[4]->{'temp'}.'°C\n'.$result->{'hourly'}[5]->{'time'}.' '.$result->{'hourly'}[5]->{'weather'}.' '.$result->{'hourly'}[5]->{'temp'}.'°C\n'.'\n----------\n'.'3、未来3天天气: \n'.$result->{'daily'}[1]->{'date'}.' '.$result->{'daily'}[1]->{'week'}.' '.$result->{'daily'}[1]->{'day'}->{'weather'}.' '.$result->{'daily'}[1]->{'night'}->{'templow'}.'-'.$result->{'daily'}[1]->{'day'}->{'temphigh'}.'°C\n'.$result->{'daily'}[2]->{'date'}.' '.$result->{'daily'}[2]->{'week'}.' '.$result->{'daily'}[2]->{'day'}->{'weather'}.' '.$result->{'daily'}[2]->{'night'}->{'templow'}.'-'.$result->{'daily'}[2]->{'day'}->{'temphigh'}.'°C\n'.$result->{'daily'}[3]->{'date'}.' '.$result->{'daily'}[3]->{'week'}.' '.$result->{'daily'}[3]->{'day'}->{'weather'}.' '.$result->{'daily'}[3]->{'night'}->{'templow'}.'-'.$result->{'daily'}[3]->{'day'}->{'temphigh'}.'°C\n';
+        $replyText = "城市: ".$result->{"city"}."\n更新时间: ".$result->{"updatetime"}."\n----------\n"."1、天气速览\n天气: ".$result->{"weather"}."\n温度: ".$result->{"temp"}."°C (最高温: ".$result->{"temphigh"}."°C 最低温: ".$result->{"templow"}."°C)\n湿度: ".$result->{"humidity"}."%"."\n风力: ".$result->{"winddirect"}.$result->{"windpower"}."\n空气: ".$result->{"aqi"}->{"quality"}."\n".$result->{"index"}[2]->{"iname"}.": ".$result->{"index"}[2]->{"ivalue"}."\n----------\n"."2、空气质量\nPM2.5: ".$result->{"aqi"}->{"pm2_5"}."\nPM10: ".$result->{"aqi"}->{"pm10"}."\nSO2: ".$result->{"aqi"}->{"so2"}."\nNO2: ".$result->{"aqi"}->{"no2"}."\nCO: ".$result->{"aqi"}->{"co"}."\n指数: ".$result->{"aqi"}->{"aqiinfo"}->{"level"}."\n影响: ".$result->{"aqi"}->{"aqiinfo"}->{"affect"}."\n----------\n"."3、未来6小时天气: \n".$result->{"hourly"}[0]->{"time"}." ".$result->{"hourly"}[0]->{"weather"}." ".$result->{"hourly"}[0]->{"temp"}."°C\n".$result->{"hourly"}[1]->{"time"}." ".$result->{"hourly"}[1]->{"weather"}." ".$result->{"hourly"}[1]->{"temp"}."°C\n".$result->{"hourly"}[2]->{"time"}." ".$result->{"hourly"}[2]->{"weather"}." ".$result->{"hourly"}[2]->{"temp"}."°C\n".$result->{"hourly"}[3]->{"time"}." ".$result->{"hourly"}[3]->{"weather"}." ".$result->{"hourly"}[3]->{"temp"}."°C\n".$result->{"hourly"}[4]->{"time"}." ".$result->{"hourly"}[4]->{"weather"}." ".$result->{"hourly"}[4]->{"temp"}."°C\n".$result->{"hourly"}[5]->{"time"}." ".$result->{"hourly"}[5]->{"weather"}." ".$result->{"hourly"}[5]->{"temp"}."°C\n"."\n----------\n"."3、未来3天天气: \n".$result->{"daily"}[1]->{"date"}." ".$result->{"daily"}[1]->{"week"}." ".$result->{"daily"}[1]->{"day"}->{"weather"}." ".$result->{"daily"}[1]->{"night"}->{"templow"}."-".$result->{"daily"}[1]->{"day"}->{"temphigh"}."°C\n".$result->{"daily"}[2]->{"date"}." ".$result->{"daily"}[2]->{"week"}." ".$result->{"daily"}[2]->{"day"}->{"weather"}." ".$result->{"daily"}[2]->{"night"}->{"templow"}."-".$result->{"daily"}[2]->{"day"}->{"temphigh"}."°C\n".$result->{"daily"}[3]->{"date"}." ".$result->{"daily"}[3]->{"week"}." ".$result->{"daily"}[3]->{"day"}->{"weather"}." ".$result->{"daily"}[3]->{"night"}->{"templow"}."-".$result->{"daily"}[3]->{"day"}->{"temphigh"}."°C\n";
         return $replyText;
     }
 }
