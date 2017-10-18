@@ -93,8 +93,9 @@ class wechatCallbackapiTest
     //接受文本消息
     public function receiveText($obj)
     {
-    	$content = trim($obj->Content);//获取文本消息的内容
-        $keyword = mb_substr($content,0,2,'utf-8');
+    	//$content = trim($obj->Content);//获取文本消息的内容
+        $content = str_replace(" ","",$obj->Content);
+        $keyword = mb_substr($content,0,2,'utf-8');//截取回复消息的前两个中文
     	switch ($keyword) {
     		case '功能':
     			$replyStr = "查询功能介绍(回复关键字)：\n1、志愿时\n2、天气+城市名3、4、5";
@@ -107,7 +108,9 @@ class wechatCallbackapiTest
     			break;
 
             case '天气':
-                $replyStr = mb_substr($content,2,6,'utf-8');;
+                $cityname = mb_substr($content,2,6,'utf-8');//获得城市名
+                $weather_json = $this->getWeather($cityname);
+                $replyStr = $this->replyWeather($weather_json);
                 return $this->replyText($obj,$replyStr);
                 break;
     		
@@ -167,6 +170,44 @@ class wechatCallbackapiTest
 				# code...
 				break;
 		}
+    }
+
+    public function getWeather($cityname)
+    {
+        $host = "http://jisutianqi.market.alicloudapi.com";
+        $path = "/weather/query";
+        $method = "GET";
+        $appcode = "5f8abfa54bed4f128d1fb245a13a6460";//7830cf6348c444d1a1455e70fb5f434e
+        $headers = array();
+        array_push($headers, "Authorization:APPCODE " . $appcode);
+        $querys = "city={$cityname}citycode=citycode&cityid=cityid&ip=ip&location=location";
+        $bodys = "";
+        $url = $host . $path . "?" . $querys;
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_FAILONERROR, false);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HEADER, false);
+        if (1 == strpos("$".$host, "https://"))
+        {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        //var_dump(curl_exec($curl));
+        $result = curl_exec($curl);
+        curl_close($curl);
+        return $result;
+    }
+
+    public function replyWeather($weather_json)
+    {
+        $arr = json_decode($weather_json);
+        $result = $arr->{"result"};
+        $replyText = '城市: '.$result->{'city'}.'<br>更新时间: '.$result->{'updatetime'}.'<hr>'.'1、天气速览<br>天气: '.$result->{'weather'}.'<br>温度: '.$result->{'temp'}.'°C (最高温: '.$result->{'temphigh'}.'°C 最低温: '.$result->{'templow'}.'°C)<br>湿度: '.$result->{'humidity'}.'%'.'<br>风力: '.$result->{'winddirect'}.$result->{'windpower'}.'<br>空气: '.$result->{'aqi'}->{'quality'}.'<br>'.$result->{'index'}[2]->{'iname'}.': '.$result->{'index'}[2]->{'ivalue'}.'<hr>'.'2、空气质量<br>PM2.5: '.$result->{'aqi'}->{'pm2_5'}.'<br>PM10: '.$result->{'aqi'}->{'pm10'}.'<br>SO2: '.$result->{'aqi'}->{'so2'}.'<br>NO2: '.$result->{'aqi'}->{'no2'}.'<br>CO: '.$result->{'aqi'}->{'co'}.'<br>指数: '.$result->{'aqi'}->{'aqiinfo'}->{'level'}.'<br>影响: '.$result->{'aqi'}->{'aqiinfo'}->{'affect'}.'<hr>'.'3、未来6小时天气: <br>'.$result->{'hourly'}[0]->{'time'}.' '.$result->{'hourly'}[0]->{'weather'}.' '.$result->{'hourly'}[0]->{'temp'}.'°C<br>'.$result->{'hourly'}[1]->{'time'}.' '.$result->{'hourly'}[1]->{'weather'}.' '.$result->{'hourly'}[1]->{'temp'}.'°C<br>'.$result->{'hourly'}[2]->{'time'}.' '.$result->{'hourly'}[2]->{'weather'}.' '.$result->{'hourly'}[2]->{'temp'}.'°C<br>'.$result->{'hourly'}[3]->{'time'}.' '.$result->{'hourly'}[3]->{'weather'}.' '.$result->{'hourly'}[3]->{'temp'}.'°C<br>'.$result->{'hourly'}[4]->{'time'}.' '.$result->{'hourly'}[4]->{'weather'}.' '.$result->{'hourly'}[4]->{'temp'}.'°C<br>'.$result->{'hourly'}[5]->{'time'}.' '.$result->{'hourly'}[5]->{'weather'}.' '.$result->{'hourly'}[5]->{'temp'}.'°C<br>'.'<hr>'.'3、未来3天天气: <br>'.$result->{'daily'}[1]->{'date'}.' '.$result->{'daily'}[1]->{'week'}.' '.$result->{'daily'}[1]->{'day'}->{'weather'}.' '.$result->{'daily'}[1]->{'night'}->{'templow'}.'-'.$result->{'daily'}[1]->{'day'}->{'temphigh'}.'°C<br>'.$result->{'daily'}[2]->{'date'}.' '.$result->{'daily'}[2]->{'week'}.' '.$result->{'daily'}[2]->{'day'}->{'weather'}.' '.$result->{'daily'}[2]->{'night'}->{'templow'}.'-'.$result->{'daily'}[2]->{'day'}->{'temphigh'}.'°C<br>'.$result->{'daily'}[3]->{'date'}.' '.$result->{'daily'}[3]->{'week'}.' '.$result->{'daily'}[3]->{'day'}->{'weather'}.' '.$result->{'daily'}[3]->{'night'}->{'templow'}.'-'.$result->{'daily'}[3]->{'day'}->{'temphigh'}.'°C<br>';
+        return $replyText;
     }
 }
 
