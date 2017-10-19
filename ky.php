@@ -142,7 +142,37 @@ class wechatCallbackapiTest
                     $replyStr = "输入数据有误，请重新输入";
                     return $this->replyText($obj,$replyStr);
                 }
+                break;
 
+            case '比赛':
+                $appkey = "ce20cdb1a57b90202c86d253a6fa469d";
+                $url = "http://op.juhe.cn/onebox/basketball/nba";
+                $params = array(
+                      "key" => $appkey,//应用APPKEY(应用详细页查询)
+                      "dtype" => "json",//返回数据的格式,xml或json，默认json
+                );
+                $paramstring = http_build_query($params);
+                $nba_json = $this->getNBA($url,$paramstring);
+                $result = json_decode($nba_json,true);
+                if($result)
+                {
+                    if($result['error_code']=='0')
+                    {
+                        //查询成功
+                        $replyStr = $this->replyNBA($nba_json);
+                        return $this->replyText($obj,$replyStr);
+                    }
+                    else
+                    {
+                        $replyStr = "查询出错，请重新输入";
+                        return $this->replyText($obj,$replyStr);
+                    }
+                }
+                else
+                {
+                    $replyStr = "查询出错，请重新输入";
+                    return $this->replyText($obj,$replyStr);
+                }
                 break;
     		
     		default:
@@ -165,7 +195,6 @@ class wechatCallbackapiTest
 		                </xml>";
 		return sprintf($replyTextMsg, $obj->FromUserName, $obj->ToUserName, time(), $contentStr);
     }
-
     //接受图片消息
     public function receiveImage($obj)
     {
@@ -282,6 +311,75 @@ class wechatCallbackapiTest
             $replyText .= $arr[$i]->{'time'}." ".$arr[$i]->{'status'}."\n";
         }
         return $replyText;
+    }
+
+    function getNBA($url,$params=false,$ispost=0)
+    {
+        $httpInfo = array();
+        $ch = curl_init();
+     
+        curl_setopt( $ch, CURLOPT_HTTP_VERSION , CURL_HTTP_VERSION_1_1 );
+        curl_setopt( $ch, CURLOPT_USERAGENT , 'JuheData' );
+        curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT , 60 );
+        curl_setopt( $ch, CURLOPT_TIMEOUT , 60);
+        curl_setopt( $ch, CURLOPT_RETURNTRANSFER , true );
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        //若为post请求
+        if( $ispost )
+        {
+            curl_setopt( $ch , CURLOPT_POST , true );
+            curl_setopt( $ch , CURLOPT_POSTFIELDS , $params );
+            curl_setopt( $ch , CURLOPT_URL , $url );
+        }
+        else
+        {
+            if($params){
+                curl_setopt( $ch , CURLOPT_URL , $url.'?'.$params );
+            }else{
+                curl_setopt( $ch , CURLOPT_URL , $url);
+            }
+        }
+        $response = curl_exec( $ch );
+        if ($response === FALSE) {
+            //echo "cURL Error: " . curl_error($ch);
+            return false;
+        }
+        $httpCode = curl_getinfo( $ch , CURLINFO_HTTP_CODE );
+        $httpInfo = array_merge( $httpInfo , curl_getinfo( $ch ) );
+        curl_close( $ch );
+        return $response;
+    }
+
+    public function replyNBA($nba_json)
+    {
+        $result = json_decode($nba_json,true);
+        $str = "";
+        $arr = $result['result']['list'];
+        for ($i=0; $i < count($arr); $i++) 
+        { 
+            $tr_len = count($arr[$i]['tr']);
+            for ($j=0; $j < $tr_len; $j++) 
+            { 
+                $status = $arr[$i]['tr'][$j]['status'];
+                $str .= $arr[$i]['tr'][$j]['time'].' '.$arr[$i]['tr'][$j]['player1'].'-'.$arr[$i]['tr'][$j]['player2'].' '.$arr[$i]['tr'][$j]['score'];
+                switch ($status) 
+                {
+                    case '0':
+                        $str .= " 未开始\n";
+                        break;
+                    case '1':
+                        $str .= " 进行中\n";
+                        break;
+                    case '2':
+                        $str .= " 已结束\n";
+                        break;
+                    default:
+                        $str .= " 数据出错\n";
+                        break;
+                }
+            }
+        }
+        return $str;
     }
 
 }
