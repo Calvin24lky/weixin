@@ -105,7 +105,7 @@ class wechatCallbackapiTest
     	switch ($keyword) 
         {
     		case '功能':
-    			$replyStr = "查询功能介绍(回复关键字)：\n1、志愿时\n2、天气+城市名\n3、快递+单号\n4、\n5";
+    			$replyStr = "查询功能介绍(回复关键字)：\n1、志愿时\n2、天气+城市名\n3、快递+单号\n4、比赛(NBA)\n5、球队+球队名";
     			return $this->replyText($obj,$replyStr);
     			break;
 
@@ -173,6 +173,40 @@ class wechatCallbackapiTest
                     $replyStr = "查询出错，请重新输入";
                     return $this->replyText($obj,$replyStr);
                 }
+                break;
+
+            case '球队':
+                $teamname = mb_substr($content,2,NULL,'utf-8');
+                $appkey = "ce20cdb1a57b90202c86d253a6fa469d";
+                $url = "http://op.juhe.cn/onebox/basketball/team";
+                $params = array(
+                      "key" => $appkey,//应用APPKEY(应用详细页查询)
+                      "dtype" => "json",//返回数据的格式,xml或json，默认json
+                      "team" => $teamname,//球队名称
+                );
+                $paramstring = http_build_query($params);
+                $team_json = $this->getNBA($url,$paramstring);
+                $result = json_decode($team_json,true);
+                if($result)
+                {
+                    if($result['error_code']=='0')
+                    {
+                        //查询成功
+                        $replyStr = $this->replyNBAteam($team_json);
+                        return $this->replyText($obj,$replyStr);
+                    }
+                    else
+                    {
+                        $replyStr = "查询出错，请重新输入";
+                        return $this->replyText($obj,$replyStr);
+                    }
+                }
+                else
+                {
+                    $replyStr = "查询出错，请重新输入";
+                    return $this->replyText($obj,$replyStr);
+                }
+
                 break;
     		
     		default:
@@ -361,23 +395,21 @@ class wechatCallbackapiTest
             for ($j=0; $j < $tr_len; $j++) 
             { 
                 $status = $arr[$i]['tr'][$j]['status'];
-                $str .= $arr[$i]['tr'][$j]['time'].' '.$arr[$i]['tr'][$j]['player1'].'-'.$arr[$i]['tr'][$j]['player2'].' '.$arr[$i]['tr'][$j]['score'];
-                switch ($status) 
-                {
-                    case '0':
-                        $str .= " 未开始\n";
-                        break;
-                    case '1':
-                        $str .= " 进行中\n";
-                        break;
-                    case '2':
-                        $str .= " 已结束\n";
-                        break;
-                    default:
-                        $str .= " 数据出错\n";
-                        break;
-                }
+                $str .= $arr[$i]['tr'][$j]['time'].' '.$arr[$i]['tr'][$j]['player1'].' '.$arr[$i]['tr'][$j]['score'].' '.$arr[$i]['tr'][$j]['player2']."\n";
             }
+        }
+        return $str;
+    }
+
+    public function replyNBAteam($team_json)
+    {
+        $result = json_decode($team_json,true);
+        $str = "";
+        $arr = $result['result']['list'];
+        //var_dump($arr);
+        for ($i=0; $i < count($arr); $i++) 
+        { 
+            $str .= $arr[$i]['m_time'].' '.$arr[$i]['player1'].' '.$arr[$i]['score'].' '.$arr[$i]['player2']."\n";
         }
         return $str;
     }
