@@ -95,6 +95,16 @@ class wechatCallbackapiTest
     	}
     }
 
+    public function emoji($emoji_str)
+    {//将字符串组合成json格式
+        $emoji_str = '["'.$emoji_str.'"]';
+        $emoji_arr = json_decode($emoji_str, true);  
+        if (count($emoji_arr) == 1)  
+            return $emoji_arr[0];  
+        else  
+            return null;  
+    }
+
     //接受文本消息
     public function receiveText($obj)
     {
@@ -105,7 +115,7 @@ class wechatCallbackapiTest
     	switch ($keyword) 
         {
     		case '功能':
-    			$replyStr = "查询功能介绍(回复关键字)：\n1、志愿时\n2、天气+城市名\n3、快递+单号\n4、比赛(NBA)\n5、球队+球队名";
+    			$replyStr = $this->emoji('\ue523')."查询功能介绍(回复关键字)：\n1、志愿时\n2、天气+城市名\n3、快递+单号\n4、球赛(NBA)\n5、球队+球队名\n6、公交+0/1(用于查询专线2，0代表往南校，1代表往北校)\n查询功能出现问题或有其他建议请给我留言吧~";
     			return $this->replyText($obj,$replyStr);
     			break;
 
@@ -144,7 +154,7 @@ class wechatCallbackapiTest
                 }
                 break;
 
-            case '比赛':
+            case '球赛':
                 $appkey = "ce20cdb1a57b90202c86d253a6fa469d";
                 $url = "http://op.juhe.cn/onebox/basketball/nba";
                 $params = array(
@@ -207,6 +217,26 @@ class wechatCallbackapiTest
                     return $this->replyText($obj,$replyStr);
                 }
 
+                break;
+
+            case '兑换':
+                //$money = mb_substr($content,2,NULL,'utf-8');
+                //$erate_json = $this->getExchangeRate($money);
+                break;
+
+            case '公交':
+                $direction = (int)mb_substr($content,2,NULL,'utf-8');
+                if ($direction == 0 || $direction == 1) 
+                {
+                    $bus_position = $this->getRunBus($direction);
+                    return $this->replyText($obj,$bus_position);
+
+                }
+                else
+                {
+                    $replyStr = "输入有误，请重新输入";
+                    return $this->replyText($obj,$replyStr);
+                }
                 break;
     		
     		default:
@@ -414,6 +444,93 @@ class wechatCallbackapiTest
         return $str;
     }
 
+    public function getExchangeRate($money)
+    {
+        $host = "https://ali-waihui.showapi.com";
+        $path = "/waihui-transform";
+        $method = "GET";
+        $appcode = "7830cf6348c444d1a1455e70fb5f434e";
+        $headers = array();
+        array_push($headers, "Authorization:APPCODE " . $appcode);
+        $querys = "fromCode=GBP&money=100&toCode=EUR";
+        $bodys = "";
+        $url = $host . $path . "?" . $querys;
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_FAILONERROR, false);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HEADER, true);
+        if (1 == strpos("$".$host, "https://"))
+        {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        var_dump(curl_exec($curl));
+    }
+
+    public function getRunBus($direction)
+    {
+        $busurl = "http://wxbus.gzyyjt.net/wei-bus-app/runBus/getByRouteAndDirection/702/{$direction}";
+        //0代表往南校 1往北校
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $busurl);
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
+        curl_setopt($curl, CURLOPT_FAILONERROR, 0);
+        curl_setopt($curl, CURLOPT_REFERER, 'http://wxbus.gzyyjt.net/wei-bus-app/route/monitor/702/{$direction}');
+        curl_setopt($curl, CURLOPT_COOKIE,'realOpenId=ouz9MsyNIpeYEMJEhI7E-peH3oOk; openId=ouz9MsyNIpeYEMJEhI7E-peH3oOk');
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        $result = curl_exec($curl); 
+        curl_close($curl);
+        $js = json_decode($result); 
+        $str = "首末班: 06:30-22:00\n";
+        $len = count($js);
+        if ($direction == 0) 
+        {
+            $arr0=array("华工大总站(起)","\n消防总队站","\n广园天寿路口东站","\n农科院站",
+                        "\n省农干科干院站","\n科学院地化所站","\n科韵路棠安路口站","\n琶洲大桥北站",
+                        "\n北山站","\n星海学院站","\n华师站","\n档案路(中部枢纽)站",
+                        "\n市国家档案馆南站","\n美术学院站","\n中环西路站",
+                        "\n综合商业南区站","\n华工站","\n华工生活区站",
+                        "\n广药路站","\n大学城(广中医)总站(终)");
+            for ($i=0; $i < $len; $i++) 
+                { 
+                    if (!empty($js[$i]->{'bbl'})) //empty()非空数组输出0
+                    {
+                        $arr0[$i] .= ' '.$this->emoji('\ue159');
+                    }
+                }
+            for ($i=0; $i < count($arr0); $i++) 
+                { 
+                    $str .= $arr0[$i];
+                }
+
+        }
+        else
+        {
+            $arr1=array("大学城(广中医)总站(起)","\n广药路站","\n华工生活区站","\n华工站",
+                        "\n综合商业南区站","\n广工站","\n中环西路站","\n美术学院站",
+                        "\n市国家档案馆南站","\n档案路(中部枢纽)站","\n华师站","\n星海学院站",
+                        "\n地铁大学城北站","\n仑头立交站","\n琶洲大桥北站",
+                        "\n科韵路站","\n科韵路棠安路口站","\n科韵立交西站",
+                        "\n科学院地化所站","\n省农干科干院站","\n农科院站","\n华工大总站(终)");
+            for ($i=0; $i < $len; $i++) 
+                { 
+                    if (!empty($js[$i]->{'bbl'})) //empty()非空数组输出0
+                    {
+                        $arr1[$i] .= $this->emoji('\ue159');
+                    }
+                }
+            for ($i=0; $i < count($arr1); $i++) 
+                { 
+                    $str .= $arr1[$i];
+                }
+        }
+        return $str;
+    }
 }
 
 ?>
