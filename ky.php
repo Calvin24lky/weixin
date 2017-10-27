@@ -115,7 +115,7 @@ class wechatCallbackapiTest
     	switch ($keyword) 
         {
     		case '功能':
-    			$replyStr = $this->emoji('\ue523')."查询功能介绍(回复关键字)：\n1、志愿时\n2、天气+城市名\n3、快递+单号\n4、球赛(NBA)\n5、球队+球队名\n6、公交+0/1(用于查询专线2，0代表往南校，1代表往北校)\n查询功能出现问题或有其他建议请给我留言吧~";
+    			$replyStr = $this->emoji('\ue523')."查询功能介绍(回复关键字)：\n".$this->emoji('\ue025')."志愿时\n".$this->emoji('\ue049')."天气+城市名(如天气广州)\n".$this->emoji('\ue112')."快递+单号\n".$this->emoji('\ue42a')."球赛(NBA)\n".$this->emoji('\ue131')."球队+球队名(如球队湖人)\n".$this->emoji('\ue159')."公交+0/1(查询专线2实时位置，公交0代表往南校，公交1代表往北校)\n查询功能出现问题或有其他建议请给我留言吧~";
     			return $this->replyText($obj,$replyStr);
     			break;
 
@@ -521,7 +521,7 @@ class wechatCallbackapiTest
                 { 
                     if (!empty($js[$i]->{'bbl'})) //empty()非空数组输出0
                     {
-                        $arr1[$i] .= $this->emoji('\ue159');
+                        $arr1[$i] .= ' '.$this->emoji('\ue159');
                     }
                 }
             for ($i=0; $i < count($arr1); $i++) 
