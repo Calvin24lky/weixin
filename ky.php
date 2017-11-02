@@ -57,6 +57,29 @@ class wechatCallbackapiTest
         }
     }
 
+    public function getAccessToken()
+    {
+        //获取access_token
+        $appid = 'wxa64980d385d02667';
+        $appSecret = 'e147079322713c0c52e91519bf92710e';
+        $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={$appid}&secret={$appSecret}";
+        //curl初始化
+        $ch = curl_init();
+
+        //设置传输选项
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);//跳过证书验证
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);  // 从证书中检查SSL加密算法是否存在
+
+        $output = curl_exec($ch);
+        $outoptARR = json_decode($output,true);
+        $access_token = $outoptARR["access_token"];
+        curl_close($ch);
+        return $access_token;
+    }
+
     //响应消息
     public function responseMsg()
     {
@@ -67,8 +90,8 @@ class wechatCallbackapiTest
     	$xmlObj = simplexml_load_string($postData,"SimpleXMLElement",LIBXML_NOCDATA);
 
     	//获取属性
-    	$toUserName = $xmlObj->ToUserName;//获取开发者微信号
-    	$fromUserName = $xmlObj->FromUserName;//获取用户的openid
+    	//$toUserName = $xmlObj->ToUserName;//获取开发者微信号
+    	//$fromUserName = $xmlObj->FromUserName;//获取用户的openid
     	$msgType = $xmlObj->MsgType;//消息的类型
 
     	//根据消息类型进行业务处理
@@ -115,7 +138,7 @@ class wechatCallbackapiTest
     	switch ($keyword) 
         {
     		case '功能':
-    			$replyStr = $this->emoji('\ue523')."查询功能介绍(回复关键字)：\n".$this->emoji('\ue025')."志愿时\n".$this->emoji('\ue049')."天气+城市名(如天气广州)\n".$this->emoji('\ue112')."快递+单号\n".$this->emoji('\ue42a')."球赛(NBA)\n".$this->emoji('\ue131')."球队+球队名(如球队湖人)\n".$this->emoji('\ue159')."公交+0/1(查询专线2实时位置，公交0代表往南校，公交1代表往北校)\n查询功能出现问题或有其他建议请给我留言吧~";
+    			$replyStr = $this->emoji('\ue523')."查询功能介绍(回复关键字)：\n".$this->emoji('\ue025')."志愿时\n".$this->emoji('\ue049')."天气+城市名(如天气广州)\n".$this->emoji('\ue112')."快递+单号\n".$this->emoji('\ue42a')."球赛(NBA)\n".$this->emoji('\ue131')."球队+球队名(如球队湖人)\n".$this->emoji('\ue159')."公交+0/1(查询专线2实时位置，公交0代表往南校，公交1代表往北校)\n查询功能出现问题或有其他建议回复(留言+内容)向我留言~";
     			return $this->replyText($obj,$replyStr);
     			break;
 
@@ -235,6 +258,21 @@ class wechatCallbackapiTest
                 else
                 {
                     $replyStr = "输入有误，请重新输入";
+                    return $this->replyText($obj,$replyStr);
+                }
+                break;
+
+            case '留言':
+                $mes = mb_substr($content,2,NULL,'utf-8');
+                $status = $this->saveLeaveMessage($mes);
+                if ($status) 
+                {
+                    $replyStr = "留言成功!";
+                    return $this->replyText($obj,$replyStr);
+                }
+                else
+                {
+                    $replyStr = "留言失败!";
                     return $this->replyText($obj,$replyStr);
                 }
                 break;
@@ -486,7 +524,7 @@ class wechatCallbackapiTest
         $result = curl_exec($curl); 
         curl_close($curl);
         $js = json_decode($result); 
-        $str = "首末班: 06:30-22:00\n";
+        $str = "专线2实时位置\n首末班: 06:30-22:00\n";
         $len = count($js);
         if ($direction == 0) 
         {
@@ -531,6 +569,43 @@ class wechatCallbackapiTest
         }
         return $str;
     }
+
+    public function saveLeaveMessage($mes)
+    {
+        $status = true;
+        $dbhost = 'localhost:3306';
+        $dbuser = 'root';
+        $dbpass = 'lky86316337';
+        $conn = mysqli_connect($dbhost, $dbuser, $dbpass);
+        if (! $conn) 
+        {
+            //die('Could not connect: '. mysqli_error());
+            die();
+            $status = false;
+            return $status;
+        }
+        mysqli_query($conn , "set names utf8");
+        mysqli_select_db($conn, 'leave_messages');
+
+        $mes_date = date("Y-m-d");//日期格式：2017-11-02
+         
+        $sql = "INSERT INTO tb1 ".
+                "(message,date) ".
+                "VALUES ".
+                "('$mes','$mes_date')";
+        mysqli_select_db( $conn, 'leave_messages' );
+        $retval = mysqli_query($conn, $sql);
+        if(! $retval )
+        {
+            die();
+            $status = false;
+            return $status;
+        }
+        mysqli_free_result($retval);
+        mysqli_close($conn);
+        return $status;
+    }
+
 }
 
 ?>
